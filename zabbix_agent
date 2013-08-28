@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+#require everyhing in lib
+Dir.glob(File.join(File.dirname(__FILE__), 'lib', "*.rb")).each { |file| require file }
+
+#require everyhing in plugins
+Dir.glob(File.join(File.dirname(__FILE__), 'plugins', "*.rb")).each { |file| require file }
+
+
+ZabbixAgentDaemon.new.run

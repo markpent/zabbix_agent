@@ -1,0 +1,14 @@
+:plugins:
+  :ha_proxy:
+    :disabled: false
+    :interval: 5
+    :backends: true
+    :frontends: false
+    :servers: false
+    :attributes: [qcur, qmax, scur, smax, bin, bout, econ, eresp]
+    :socket_file: /var/run/haproxy.sock
+  :passenger:
+    :interval: 5
+:reporting_rate: 10
+
+	
