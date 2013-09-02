@@ -28,7 +28,7 @@ class ZabbixAgentPassenger < ZabbixAgentPlugin
   end
   
   def reset_data
-    @poll_data = {:active=>0, :queue=>0}
+    @poll_data = {:active=>0, :queue=>0, :max_active=>0, :max_queue=>0}
     @poll_count = 0
   end
   
@@ -45,8 +45,12 @@ class ZabbixAgentPassenger < ZabbixAgentPlugin
 		    server_instances.first.connect(:passenger_status) do
 		      general_info = server_instances.first.xml
 		      doc = Nokogiri::XML(general_info)
-		      @poll_data[:active] += doc.at("/info/active").content.to_s.to_i
-		      @poll_data[:queue] += doc.at("/info/global_queue_size").content.to_s.to_i
+		      active = doc.at("/info/active").content.to_s.to_i
+		      @poll_data[:active] += active
+		      @poll_data[:max_active] = active if @poll_data[:max_active] < active
+		      queue = doc.at("/info/global_queue_size").content.to_s.to_i
+		      @poll_data[:queue] += queue
+		      @poll_data[:max_queue] = queue if @poll_data[:max_queue] < queue
 		      @poll_count += 1
 		    end
 		  rescue PhusionPassenger::AdminTools::ServerInstance::RoleDeniedError
@@ -61,7 +65,9 @@ class ZabbixAgentPassenger < ZabbixAgentPlugin
     result = []
     unless @poll_count == 0
       result << ["passenger.active",  (@poll_data[:active].to_f / @poll_count.to_f).to_i]
+      result << ["passenger.max.active",  @poll_data[:max_active]]
       result << ["passenger.queue",(@poll_data[:queue].to_f / @poll_count.to_f).to_i]
+      result << ["passenger.max.queue",  @poll_data[:max_queue]]
     end
     reset_data
     result

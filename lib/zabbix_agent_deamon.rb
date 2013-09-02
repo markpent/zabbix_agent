@@ -35,6 +35,8 @@ class ZabbixAgentDaemon
     if @options[:command] == :stop
       stop_daemon
       return
+    elsif @options[:command] == :status
+      exit!(check_daemon)
     end
     
     return if !load_config
@@ -126,6 +128,16 @@ class ZabbixAgentDaemon
     ZabbixAgentDaemonizer.stop_pid(@options)
   end
   
+  def check_daemon
+    if ZabbixAgentDaemonizer.get_pid(@options).nil?
+      puts "Not Running"
+      return 1
+    else
+      puts "Running"
+      return 0
+    end
+  end
+  
   def trap_signals
     Signal.trap("TERM") do
       logger.warn "Terminating..."
@@ -184,7 +196,7 @@ class ZabbixAgentDaemon
   end
   
   def poll
-    logger.info "Beginning Polling with reporting interval of #{@config[:reporting_rate]} seconds"
+    logger.info "Beginning polling with reporting interval of #{@config[:reporting_rate]} seconds"
     last_reported = Time.now.to_i
     while @running
       for plugin in @plugins

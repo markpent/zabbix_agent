@@ -1,0 +1,69 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          zabbix-extra-agent
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Should-Start:      $network $syslog
+# Should-Stop:       $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Extra Zabbix Agent
+# Description:       monitor passenger and ha-proxy
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin;
+
+CONFIG="config.yml"
+ZABBIX_AGENT_BIN="/usr/local/bin/zabbix_agent/zabbix_agent"
+LOG_LEVEL="info"
+
+test -f /etc/default/zabbix-extra-agent && . /etc/default/zabbix-extra-agent
+
+if [ ! -x /usr/local/bin/ruby ]; then
+    log_action_msg "ruby binary missing - not starting"
+    log_end_msg 1
+    exit 1
+fi
+
+if [ ! -x $ZABBIX_AGENT_BIN ]; then
+    log_action_msg "$ZABBIX_AGENT_BIN missing - not starting"
+    log_end_msg 1
+    exit 1
+fi
+
+. /lib/lsb/init-functions
+PIDFILE=/var/run/zabbix-extra-agent.pid
+
+case "$1" in
+  start)
+    log_daemon_msg "Starting zabbix-extra-agent..." "zabbix-extra-agent"
+    mkdir -p /var/log/zabbix-extra-agent/
+    $ZABBIX_AGENT_BIN start -c $CONFIG -p $PIDFILE -l /var/log/zabbix-extra-agent/agent.log -v $LOG_LEVEL -d
+    log_end_msg 0
+    ;;
+
+  stop)
+    log_daemon_msg "Stopping zabbix-extra-agent..." "zabbix-extra-agent"
+    $ZABBIX_AGENT_BIN stop  -p $PIDFILE
+    log_end_msg 0
+    ;;
+
+  restart)
+    $0 stop
+    $0 start
+    ;;
+    
+  status)
+     
+    $ZABBIX_AGENT_BIN status  -p $PIDFILE
+    exit $?
+    ;;
+
+  *)
+    log_action_msg "Usage: /etc/init.d/zabbix-extra-agent {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+
+exit 0
