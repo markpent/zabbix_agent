@@ -38,8 +38,9 @@ class ZabbixAgentDaemon
     end
     
     return if !load_config
-    return if !load_plugins
     init_logging
+    return if !load_plugins
+    
     trap_signals
     if @options[:daemonize]
       return if !daemonize
@@ -106,9 +107,13 @@ class ZabbixAgentDaemon
     @config[:plugins].each do |plugin_name, plugin_config|
       next if plugin_config[:disabled] == true
       plugin = ZabbixAgentPluginManager.get_plugin(plugin_name, plugin_config)
-      return false if plugin.nil?
-      plugin.set_daemon(self)
-      @plugins << plugin
+      if plugin.nil? 
+        return false if plugin_config[:disabled] != :auto
+        logger.info("Skipping plugin #{plugin_name} (start from console to see reason)")
+      else
+        plugin.set_daemon(self)
+        @plugins << plugin
+      end
     end
     true
   end
