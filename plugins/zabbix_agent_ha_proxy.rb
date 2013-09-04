@@ -24,6 +24,7 @@ class ZabbixAgentHaProxy < ZabbixAgentPlugin
   AVERAGE_ATTRIBUTES = {
     "qcur"=>true,
     "scur"=>true,
+    "act"=>:backend
   }
   
   
@@ -79,7 +80,7 @@ class ZabbixAgentHaProxy < ZabbixAgentPlugin
       poll_data = @poll_data[data_name]
       @poll_data[data_name] = poll_data = {} if poll_data.nil?
       @attributes.each do |code|
-        if AVERAGE_ATTRIBUTES[code]
+        if AVERAGE_ATTRIBUTES[code] == true || (AVERAGE_ATTRIBUTES[code] == :backend && server == "BACKEND")
           poll_data[code] = 0 if poll_data[code].nil?
           poll_data[code] += row[cols[code]].to_i
         else
@@ -96,7 +97,7 @@ class ZabbixAgentHaProxy < ZabbixAgentPlugin
     @poll_data.each do |server_name, values|
       #set averages
       AVERAGE_ATTRIBUTES.each do |code|
-        if values[code]
+        if values[code] && values[code].to_i != 0
           values[code] = values[code].to_f / @poll_count.to_f
         end
       end

@@ -5,7 +5,7 @@
     :backends: true
     :frontends: false
     :servers: false
-    :attributes: [qcur, qmax, scur, smax, bin, bout, econ, eresp]
+    :attributes: [qcur, qmax, scur, smax, bin, bout, econ, eresp, act]
     :socket_file: /var/run/haproxy.sock
   :passenger:
     :disabled: :retry
