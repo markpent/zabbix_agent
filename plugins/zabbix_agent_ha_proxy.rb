@@ -96,7 +96,7 @@ class ZabbixAgentHaProxy < ZabbixAgentPlugin
     result = []
     @poll_data.each do |server_name, values|
       #set averages
-      AVERAGE_ATTRIBUTES.each do |code|
+      AVERAGE_ATTRIBUTES.keys.each do |code|
         if values[code] && values[code].to_i != 0
           values[code] = values[code].to_f / @poll_count.to_f
         end
