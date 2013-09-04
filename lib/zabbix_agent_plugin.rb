@@ -2,6 +2,22 @@ class ZabbixAgentPlugin
 
   attr_accessor :name
   
+  
+  def call_check_ok_to_load
+    result = check_ok_to_load
+    @ok = result.nil?
+    result
+  end
+  
+  #return nil of all ok, or an error message
+  def check_ok_to_load
+    nil
+  end
+  
+  def ok?
+    @ok
+  end
+  
   def set_daemon(daemon)
     @daemon = daemon
   end
@@ -21,7 +37,21 @@ class ZabbixAgentPlugin
   
   def run_polling
     @last_polled = Time.now.to_i
-    poll
+    begin
+      poll
+      if !@ok
+        logger.info("#{self.name} now polling") #report that the plugin is now working again...
+        @ok = true
+      end
+    rescue Exception=>e
+      if @ok
+        #first exception.. report it...
+        @ok = false
+        raise
+      else
+        logger.debug("Error polling #{name}: #{e.message}")
+      end
+    end
   end
   
   #override this method

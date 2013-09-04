@@ -113,7 +113,17 @@ class ZabbixAgentDaemon
         return false if plugin_config[:disabled] != :auto
         logger.info("Skipping plugin #{plugin_name} (start from console to see reason)")
       else
+        err = plugin.call_check_ok_to_load
+        if err
+          if plugin_config[:disabled] == :retry
+            logger.info("Error during #{plugin_name}.check_ok_to_load: #{err} (will retry during polling)")
+          else
+            logger.info("Skipping plugin #{plugin_name}: #{err}")
+            next
+          end
+        end
         plugin.set_daemon(self)
+        plugin.name = plugin_name
         @plugins << plugin
       end
     end
@@ -220,7 +230,7 @@ class ZabbixAgentDaemon
     report_data = []
     for plugin in @plugins
       begin
-        report_data += plugin.prepare_report
+        report_data += plugin.prepare_report if plugin.ok?
       rescue Exception=>e
         logger.error("Error preparing report for plugin #{plugin.name}: #{e.message}")
         logger.debug(e.backtrace.join("\n"))

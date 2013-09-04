@@ -1,6 +1,6 @@
 :plugins:
   :ha_proxy:
-    :disabled: :auto
+    :disabled: :retry
     :interval: 5
     :backends: true
     :frontends: false
@@ -8,8 +8,8 @@
     :attributes: [qcur, qmax, scur, smax, bin, bout, econ, eresp]
     :socket_file: /var/run/haproxy.sock
   :passenger:
-    :disabled: :auto
+    :disabled: :retry
     :interval: 5
 :reporting_rate: 10
 
-	
+  

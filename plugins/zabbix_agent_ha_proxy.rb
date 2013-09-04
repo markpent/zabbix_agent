@@ -9,13 +9,16 @@ class ZabbixAgentHaProxy < ZabbixAgentPlugin
     @attributes = config[:attributes]
     @socket_file = config[:socket_file].nil? ? "/var/run/haproxy.sock" : config[:socket_file]
     reset_data
+  end
+  
+  def check_ok_to_load
     #make sure we can access the socket file
     begin
       UNIXSocket.open(@socket_file) {}
     rescue Exception=>e
-      raise "unable to access stats socket file #{@socket_file}: #{e.message}"
+      return "unable to access stats socket file #{@socket_file}: #{e.message}"
     end
-    #puts self.inspect
+    nil
   end
   
   AVERAGE_ATTRIBUTES = {
@@ -30,7 +33,7 @@ class ZabbixAgentHaProxy < ZabbixAgentPlugin
   end
   
   def poll
-    logger.info "polling ha_proxy"
+    logger.debug "polling ha_proxy"
     @poll_count += 1
     data = get_stats_data
     extract_stats(data)

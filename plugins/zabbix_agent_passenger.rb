@@ -7,24 +7,28 @@ require 'nokogiri'
 
 class ZabbixAgentPassenger < ZabbixAgentPlugin
   def initialize(config)
+    reset_data
+  end
+  
+  def check_ok_to_load
     server_instances = PhusionPassenger::AdminTools::ServerInstance.list
-		if server_instances.empty?
-			raise "Phusion Passenger doesn't seem to be running."
-		elsif server_instances.size > 1
-			raise "It appears that multiple Passenger instances are running."
-		else
-		  #make sure we can connect
-		  begin
-		    server_instances.first.connect(:passenger_status) do
-		      general_info = server_instances.first.status
-		    end
-		  rescue PhusionPassenger::AdminTools::ServerInstance::RoleDeniedError
-		    raise "You do not have permission to query the passenger instance"
-		  rescue SystemCallError => e
-		    raise "Cannot query status for Phusion Passenger instance #{server_instances.first.pid}: #{e.to_s}"
-		  end
-		end
-		reset_data
+    if server_instances.empty?
+      return "Phusion Passenger doesn't seem to be running."
+    elsif server_instances.size > 1
+      return "It appears that multiple Passenger instances are running."
+    else
+      #make sure we can connect
+      begin
+        server_instances.first.connect(:passenger_status) do
+          general_info = server_instances.first.status
+        end
+      rescue PhusionPassenger::AdminTools::ServerInstance::RoleDeniedError
+        return "You do not have permission to query the passenger instance"
+      rescue SystemCallError => e
+        return "Cannot query status for Phusion Passenger instance #{server_instances.first.pid}: #{e.to_s}"
+      end
+    end
+    nil
   end
   
   def reset_data
@@ -33,32 +37,32 @@ class ZabbixAgentPassenger < ZabbixAgentPlugin
   end
   
   def poll
-    logger.info "polling passenger"
+    logger.debug "polling passenger"
     server_instances = PhusionPassenger::AdminTools::ServerInstance.list
-		if server_instances.empty?
-			logger.error "Phusion Passenger doesn't seem to be running."
-		elsif server_instances.size > 1
-			logger.error "It appears that multiple Passenger instances are running."
-		else
-		  #make sure we can connect
-		  begin
-		    server_instances.first.connect(:passenger_status) do
-		      general_info = server_instances.first.xml
-		      doc = Nokogiri::XML(general_info)
-		      active = doc.at("/info/active").content.to_s.to_i
-		      @poll_data[:active] += active
-		      @poll_data[:max_active] = active if @poll_data[:max_active] < active
-		      queue = doc.at("/info/global_queue_size").content.to_s.to_i
-		      @poll_data[:queue] += queue
-		      @poll_data[:max_queue] = queue if @poll_data[:max_queue] < queue
-		      @poll_count += 1
-		    end
-		  rescue PhusionPassenger::AdminTools::ServerInstance::RoleDeniedError
-		    logger.error "You do not have permission to query the passenger instance"
-		  rescue SystemCallError => e
-		    logger.error "Cannot query status for Phusion Passenger instance #{server_instances.first.pid}: #{e.to_s}"
-		  end
-		end
+    if server_instances.empty?
+      raise "Phusion Passenger doesn't seem to be running."
+    elsif server_instances.size > 1
+      raise "It appears that multiple Passenger instances are running."
+    else
+      #make sure we can connect
+      begin
+        server_instances.first.connect(:passenger_status) do
+          general_info = server_instances.first.xml
+          doc = Nokogiri::XML(general_info)
+          active = doc.at("/info/active").content.to_s.to_i
+          @poll_data[:active] += active
+          @poll_data[:max_active] = active if @poll_data[:max_active] < active
+          queue = doc.at("/info/global_queue_size").content.to_s.to_i
+          @poll_data[:queue] += queue
+          @poll_data[:max_queue] = queue if @poll_data[:max_queue] < queue
+          @poll_count += 1
+        end
+      rescue PhusionPassenger::AdminTools::ServerInstance::RoleDeniedError
+        raise "You do not have permission to query the passenger instance"
+      rescue SystemCallError => e
+        raise "Cannot query status for Phusion Passenger instance #{server_instances.first.pid}: #{e.to_s}"
+      end
+    end
   end
   
   def prepare_report
