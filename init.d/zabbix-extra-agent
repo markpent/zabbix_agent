@@ -14,7 +14,7 @@
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin;
 
-CONFIG="config.yml"
+CONFIG="/usr/local/bin/zabbix_agent/config.yml"
 ZABBIX_AGENT_BIN="/usr/local/bin/zabbix_agent/zabbix_agent"
 LOG_LEVEL="info"
 
