@@ -113,6 +113,7 @@ class ZabbixAgentDaemon
         return false if plugin_config[:disabled] != :auto
         logger.info("Skipping plugin #{plugin_name} (start from console to see reason)")
       else
+        plugin.set_daemon(self)
         err = plugin.call_check_ok_to_load
         if err
           if plugin_config[:disabled] == :retry
@@ -122,7 +123,6 @@ class ZabbixAgentDaemon
             next
           end
         end
-        plugin.set_daemon(self)
         plugin.name = plugin_name
         @plugins << plugin
       end
