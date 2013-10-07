@@ -10,6 +10,6 @@
   :passenger:
     :disabled: :retry
     :interval: 5
-:reporting_rate: 300
+:reporting_rate: 20
 
   
