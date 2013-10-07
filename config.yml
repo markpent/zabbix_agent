@@ -10,6 +10,10 @@
   :passenger:
     :disabled: :retry
     :interval: 5
+  :snippet_cache:
+    :disabled: :retry
+    :interval: 5
+    :require: /usr/local/lib/snippet_cache/snippet_cache.rb
 :reporting_rate: 20
 
   
