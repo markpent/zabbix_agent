@@ -21,9 +21,7 @@ class ZabbixAgentSnippetCache < ZabbixAgentPlugin
   end
   
   AVERAGE_ATTRIBUTES = {
-    "qcur"=>true,
-    "scur"=>true,
-    "act"=>:backend
+    "threads.running.current"=>true
   }
   
   
@@ -40,8 +38,12 @@ class ZabbixAgentSnippetCache < ZabbixAgentPlugin
       
     stats.each do |key, value|
       if AVERAGE_ATTRIBUTES[key] == true
+        value = value.to_i
         @poll_data[key] = 0 if @poll_data[key].nil?
-        @poll_data[key] += value.to_i
+        @poll_data[key] += value
+        key2 = "#{key}.max"
+        @poll_data[key2] = 0 if @poll_data[key2].nil?
+        @poll_data[key2] = value if value > @poll_data[key2]
       else
         @poll_data[key] = value
       end
